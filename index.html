@@ -1,0 +1,210 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Augmented Faces with ARCore in Kotlin</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/codelab-elements/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid="UA-70080194-6"
+                  id="photo-booth-codelab"
+                  title="Augmented Faces with ARCore in Kotlin"
+                  environment="web"
+                  feedback-link="https://github.com/Kristina-Simakova/photobooth_codelab_start_project/issues">
+    
+      <google-codelab-step label="Introduction" duration="0">
+        <p><strong>Last Updated:</strong> 2020-10-17</p>
+<h2 is-upgraded><strong>What you&#39;ll build</strong></h2>
+<p>In this codelab, we will learn how to use Augmented Faces API. We will use ARCore Android SDK and Kotlin without using Sceneform SDK.</p>
+<p class="image-container"><img style="width: 320.64px" src="img/948399246aed620d.png"></p>
+<p>This codelab is focused on Augmented Faces API. Non-relevant concepts and code blocks are glossed over and are provided for you to simply copy and paste.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Prerequisites" duration="1">
+        <h2 is-upgraded><strong>Hardware Requirements</strong></h2>
+<ul>
+<li>A <a href="https://developers.google.com/ar/discover/#supported_devices" target="_blank">supported ARCore device</a>, connected via a USB cable to your development machine. This device also must support the Depth API. Please see <a href="https://developers.google.com/ar/discover/supported-devices" target="_blank">this list of supported devices</a>.</li>
+<li>Enable USB debugging for this device.</li>
+</ul>
+<h2 is-upgraded><strong>Software Requirements</strong></h2>
+<ul>
+<li><a href="https://github.com/google-ar/arcore-android-sdk/releases" target="_blank">ARCore SDK 1.19.0</a> or later.</li>
+<li>A development machine with <a href="https://developer.android.com/studio/index.html" target="_blank">Android Studio</a> (v3.0 or later).</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Getting set up" duration="5">
+        <h2 is-upgraded><strong>Download the Starter Project</strong></h2>
+<p>You can either clone the repository: </p>
+<pre><code>git clone https://github.com/Kristina-Simakova/photobooth_codelab_start_project.git</code></pre>
+<p>Or download a ZIP file and extract it:</p>
+<p><a href="https://github.com/Kristina-Simakova/photobooth_codelab_start_project/archive/master.zip" target="_blank"><paper-button class="colored" raised><iron-icon icon="file-download"></iron-icon>Download ZIP</paper-button></a></p>
+<p>Launch Android Studio. Click <strong>Open an existing Android Studio project</strong>. </p>
+<h2 is-upgraded><strong>Running the project</strong></h2>
+<p>When you run the app for the first time, it will request CAMERA permission. Tap <strong>Allow</strong> to continue.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Project Setup" duration="3">
+        <h2 is-upgraded><strong>What&#39;s our starting point?</strong></h2>
+<p>Our starting point is a modified version of ARCore SDK sample for Augmented Faces. The code has been modified in a way that we can now easily add different textures and objects to a face object without using Sceneform SDK. </p>
+<h2 is-upgraded><strong>Project structure</strong></h2>
+<ul>
+<li><code>Helpers</code> - original Java files from sample code </li>
+<li><code>Rendering</code> - original Java files from sample code that handles rendering of AR objects and background</li>
+</ul>
+<p>Additional files for this Codelab: </p>
+<ul>
+<li><code>AugmentedFaceFragment.kt</code> - handles rendering and tracking of Augmented Faces </li>
+<li><code>AugmentedFaceListener.kt</code> - handles Add and Update Augmented Faces callbacks</li>
+<li><code>AugmentedFaceNode.kt</code> - handles the rendering of a face including a texture and associated 3D models</li>
+<li><code>AugmentedFaceRenderer.kt</code> - renders face texture</li>
+<li><code>FaceRegion.kt</code> - renders 3D model located on a defined FaceLandmark</li>
+</ul>
+<p class="image-container"><img style="width: 624.00px" src="img/157f08ef5d7708d4.png"></p>
+<h2 is-upgraded><strong>MainActivity setup</strong></h2>
+<p><code>activity_main.xml</code></p>
+<pre><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
+&lt;androidx.constraintlayout.widget.ConstraintLayout xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;
+   xmlns:tools=&#34;http://schemas.android.com/tools&#34;
+   android:layout_width=&#34;match_parent&#34;
+   android:layout_height=&#34;match_parent&#34;
+   tools:context=&#34;.MainActivity&#34;&gt;
+
+   &lt;fragment android:name=&#34;blog.creativetech.arfaces.arface.AugmentedFaceFragment&#34;
+       android:id=&#34;@+id/face_view&#34;
+       android:layout_width=&#34;match_parent&#34;
+       android:layout_height=&#34;match_parent&#34;
+       android:layout_gravity=&#34;top&#34; /&gt;
+
+&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;
+</code></pre>
+<p><code>MainActivity.kt</code></p>
+<pre><code>class MainActivity : AppCompatActivity(), AugmentedFaceListener {
+   override fun onCreate(savedInstanceState: Bundle?) {
+       super.onCreate(savedInstanceState)
+       setContentView(R.layout.activity_main)
+       (face_view as AugmentedFaceFragment).setAugmentedFaceListener(this)
+   }
+
+   override fun onFaceAdded(face: AugmentedFaceNode) {}
+
+   override fun onFaceUpdate(face: AugmentedFaceNode) {}
+}</code></pre>
+<p>In <code>activity_main.xm</code>l we add <code>AugmentedFaceFragment</code> as a main view and to be able to receive events from this fragment, we need to define and set <code>AugmentedFaceListener</code> to our fragment. </p>
+<p><code>onFaceAdded</code> method will be called when ARCore detects a new face and <code>onFaceUpdate</code> will be called on each frame update. </p>
+<p>Let&#39;s add a face texture as our next step.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Add face texture" duration="5">
+        <p>We will use ARCore sample assets for our first face mask. You can find <code>assets/models</code> folder in your project. Let&#39;s add <code>freckles.png</code> as face texture: </p>
+<p>In <code>MainActivity.kt</code> modify <code>onFaceAdded</code> method as follows:</p>
+<pre><code>override fun onFaceAdded(face: AugmentedFaceNode) {
+   face.setFaceMeshTexture(&#34;models/freckles.png&#34;)
+}</code></pre>
+<p>Now, run the app and see the result:</p>
+<p class="image-container"><img style="width: 323.76px" src="img/c75694bba8a9d028.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Add 3D models" duration="3">
+        <h2 is-upgraded><strong>Introduction to AugmentedFaceNode</strong></h2>
+<p>AugmentedFace class uses the face mesh and center pose to identify face regions. These regions are:</p>
+<ul>
+<li>Left forehead (LEFT_FOREHEAD)</li>
+<li>Right forehead (RIGHT_FOREHEAD)</li>
+<li>Tip of the node (NOSE_TIP)</li>
+</ul>
+<p>This project includes the AugmentedFaceNode class. Inspired by Sceneform, it is a node that will render visual effects on a detected face using ARCore. <code>AugmentedFaceNode</code> defines same face regions as <code>AugmentedFace</code> in a companion object:</p>
+<p><code>AugmentedFaceNode.kt</code></p>
+<pre><code>companion object {
+   enum class FaceLandmark {
+       FOREHEAD_RIGHT,
+       FOREHEAD_LEFT,
+       NOSE_TIP
+   }
+}</code></pre>
+<p>Later in this tutorial, we will extend <code>FaceLandmark enum class</code> and add our own face regions.</p>
+<p><code>AugmentedFaceNode</code> includes faceLandmarks <code>HashMap</code> that connects FaceLandmark with a 3D model.</p>
+<h2 is-upgraded>Connecting 3D models with FaceLandmarks</h2>
+<p>Now let&#39;s add 3D models on all 3 defined FaceLandmarks. Using same assets from ARCore sample, we need to update our method as follows:</p>
+<p><code>MainActivity.kt</code></p>
+<pre><code>override fun onFaceAdded(face: AugmentedFaceNode) {
+   face.setFaceMeshTexture(&#34;models/freckles.png&#34;)
+   face.setRegionModel(
+       AugmentedFaceNode.Companion.FaceLandmark.NOSE_TIP,
+       &#34;models/NOSE.obj&#34;,
+       &#34;models/nose_fur.png&#34;)
+   face.setRegionModel(
+       AugmentedFaceNode.Companion.FaceLandmark.FOREHEAD_LEFT,
+       &#34;models/FOREHEAD_LEFT.obj&#34;,
+       &#34;models/ear_fur.png&#34;)
+   face.setRegionModel(
+       AugmentedFaceNode.Companion.FaceLandmark.FOREHEAD_RIGHT,
+       &#34;models/FOREHEAD_RIGHT.obj&#34;,
+       &#34;models/ear_fur.png&#34;)
+}</code></pre>
+<p>We use <code>setRegionModel</code> method with <code>FaceLandmark</code>, path to <code>.OBJ</code> file and path to the model texture.</p>
+<p>Run the app again and see the result:</p>
+<p class="image-container"><img style="width: 320.64px" src="img/948399246aed620d.png"></p>
+<h2 is-upgraded><strong>Next steps</strong></h2>
+<p>Check out Part 2 of this series. In the second part of this tutorial we will learn the following concepts:</p>
+<ul>
+<li>Define custom FaceLandmarks</li>
+<li>Prepare your 3D models for AR</li>
+<li>Add several filters and switch between them at runtime with a button</li>
+<li>Add tint to background</li>
+</ul>
+<p>The final result of the second part of codelab:</p>
+<p class="image-container"><img style="width: 600.00px" src="img/ce82ce866d87f181.gif"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Congratulations" duration="0">
+        <p>Congratulations, you&#39;ve successfully built your ARCore Augmented Face app without Sceneform! </p>
+<p>You have created an Android app based on ARCore SDK and Kotlin. You have learned how to apply textures and 3D models to a recognised face. </p>
+<p>You now know the key steps required to work with AugmentedFaces API from ARCore and can build face filter applications in Kotlin and ARCore.</p>
+<h2 is-upgraded><strong>Reference docs</strong></h2>
+<ul>
+<li><a href="https://github.com/google-ar/arcore-android-sdk" target="_blank">ARCore SDK github repository</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Shader" target="_blank">Wikipedia: Shader</a></li>
+<li><a href="https://developers.google.com/ar/develop/java/augmented-faces" target="_blank">Augmented Faces API</a></li>
+</ul>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/codelab-elements/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/prettify.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>

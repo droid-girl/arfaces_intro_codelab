@@ -1,0 +1,29 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2020-10-31T17:56:46Z",
+  "id": "photo-booth-codelab",
+  "duration": 17,
+  "title": "Augmented Faces with ARCore in Kotlin",
+  "authors": "Kristina Simakova",
+  "summary": "In this codelab, you'll build an app using ARCore Augmented Faces API.",
+  "source": "1ot4aioXuYLWte9hU2GmNPKUREs9Vt_PhuqC99kVBoyI",
+  "theme": "android",
+  "status": [
+    "published"
+  ],
+  "category": [
+    "Android"
+  ],
+  "tags": [
+    "android",
+    "arcore",
+    "augmentedfaces",
+    "kotlin"
+  ],
+  "feedback": "https://github.com/Kristina-Simakova/photobooth_codelab_start_project/issues",
+  "ga": "UA-70080194-6",
+  "url": "photo-booth-codelab"
+}
